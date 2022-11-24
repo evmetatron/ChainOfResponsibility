@@ -1,12 +1,13 @@
 # Spring Kotlin Chain Of Responsibility
 
-[![](https://jitpack.io/v/evmetatron/spring-kotlin-chain-of-responsibility.svg)](https://jitpack.io/#evmetatron/spring-kotlin-chain-of-responsibility)
+[![CI](https://github.com/evmetatron/spring-kotlin-chain-of-responsibility/workflows/CI/badge.svg)](https://github.com/evmetatron/spring-kotlin-chain-of-responsibility/actions?query=workflow%3ACI)
+[![JitPack](https://jitpack.io/v/evmetatron/spring-kotlin-chain-of-responsibility.svg)](https://jitpack.io/#evmetatron/spring-kotlin-chain-of-responsibility)
 
 Library for implementing chain of responsibility pattern
 
 **Only for primary constructor**
 
-![](pictures/chain-diagram.png)
+![Diagram](pictures/chain-diagram.png)
 
 The library is located in JitPack
 
@@ -65,11 +66,60 @@ fun chainFactory(): ChainFactory =
 // Add classes for sort. Other classes that implement the interface will 
 // also be added, but sorted at the very end
 @Bean
-fun inputHandler(@Autowired chainFactory: ChainFactory): ChainInterface? =
+fun chain(@Autowired chainFactory: ChainFactory): ChainInterface? =
     chainFactory.createChain(
         listOf(
             ChainA::class,
             ChainB::class,
         ),
     )
+```
+
+## Example
+
+### Create interface and classes
+
+```kotlin
+interface ChainInterface {
+    fun chain(): ChainInterface?
+}
+
+class ChainA(
+    // Autowired dependencies
+    private val exampleDependency: ExampleDependency,
+    // ...
+    // Chain
+    private val chain: ChainInterface?,
+): ChainInterface {
+    override fun chain(): ChainInterface? =
+        chain
+}
+
+class ChainB(
+    // Chain
+    private val chain: ChainInterface?,
+): ChainInterface {
+    override fun chain(): ChainInterface? =
+        chain
+}
+
+class ChainC(
+    // Chain
+    private val chain: ChainInterface?,
+): ChainInterface {
+    override fun chain(): ChainInterface? =
+        chain
+}
+```
+
+### Call chains
+
+```kotlin
+@Component
+class ExampleClass(
+    private val chain: ChainInterface?,
+) {
+    fun example() =
+        chain?.chain()?.chain()?.chain()
+}
 ```
